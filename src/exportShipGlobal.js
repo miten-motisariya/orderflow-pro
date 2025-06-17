@@ -21,7 +21,6 @@ export const exportToShipGlobalCSV = (orders, startingInvoiceNumber) => {
     const mappedOrders = orders.map((row, index) => {
 
         const currency = 'USD';
-        const packageWeight = '0.05';
         let customerFirstName = row?.firstName;
         let customerLastName = row?.lastName;
         const customerShippingAddress = row?.addressLine1 || '';
@@ -32,18 +31,26 @@ export const exportToShipGlobalCSV = (orders, startingInvoiceNumber) => {
         const vendorOrderItemName = 'Fabric Cotton Cap';
         const vendorOrderItemQuantity = row?.noOfItems || '';
         
-        // Dynamic unit price based on quantity
+        // Dynamic unit price and package weight based on quantity
         let vendorOrderItemUnitPrice;
+        let packageWeight;
         const quantity = parseInt(vendorOrderItemQuantity);
         
         if (quantity === 1) {
             vendorOrderItemUnitPrice = 11;
+            packageWeight = '0.05';
         } else if (quantity === 2) {
             vendorOrderItemUnitPrice = 11 / 2;
+            packageWeight = '0.05';
         } else if (quantity === 3) {
-            vendorOrderItemUnitPrice = 11 / 3;
+            vendorOrderItemUnitPrice = 11 / 3; // 3.67 (rounded)
+            packageWeight = '0.05';
+        } else if (quantity >= 4) {
+            vendorOrderItemUnitPrice = 11 * quantity; // 11 multiplied by quantity
+            packageWeight = '0.15'; // 150gm
         } else {
-            vendorOrderItemUnitPrice = 11; // Default fallback for other quantities
+            vendorOrderItemUnitPrice = 17; // Default fallback for other quantities
+            packageWeight = '0.05';
         }
 
         // Destructure address if Street 2 is empty
