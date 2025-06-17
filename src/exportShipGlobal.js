@@ -31,7 +31,20 @@ export const exportToShipGlobalCSV = (orders, startingInvoiceNumber) => {
         const customerShippingCountryCode = getCountryCode(row?.country || '');
         const vendorOrderItemName = 'Fabric Cotton Cap';
         const vendorOrderItemQuantity = row?.noOfItems || '';
-        const vendorOrderItemUnitPrice = 17;
+        
+        // Dynamic unit price based on quantity
+        let vendorOrderItemUnitPrice;
+        const quantity = parseInt(vendorOrderItemQuantity);
+        
+        if (quantity === 1) {
+            vendorOrderItemUnitPrice = 11;
+        } else if (quantity === 2) {
+            vendorOrderItemUnitPrice = 11 / 2;
+        } else if (quantity === 3) {
+            vendorOrderItemUnitPrice = 11 / 3;
+        } else {
+            vendorOrderItemUnitPrice = 11; // Default fallback for other quantities
+        }
 
         // Destructure address if Street 2 is empty
         let address1 = customerShippingAddress;
