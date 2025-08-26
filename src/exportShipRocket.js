@@ -39,7 +39,7 @@ export const exportToShipRocketCSV = (orders, startingInvoiceNumber) => {
         }
 
         // Adjust selling price for Canada
-        const sellingPrice = row?.country === 'Canada' ? 12 : 8;
+        const sellingPrice = row?.country === 'Canada' ? 6 : 5;
 
         // Map fields from the order to ShipRocket CSV format
         return {
@@ -59,8 +59,8 @@ export const exportToShipRocketCSV = (orders, startingInvoiceNumber) => {
             'Shipping Address City': row?.city || '',
             'Shipping Address State': row?.state || 'NA',
             'Master SKU': 'CAP',
-            'Product Name': 'Fabric Cotton Cap',
-            'HSN code': '65061090', // Default HSN code for product
+            'Product Name': 'Fabric Surgical Scrub Cap',
+            'HSN code': '62101000', // Default HSN code for product
             'Product Quantity': row?.noOfItems || '',
             'Tax': 1, // Assuming tax is 0
             'VAT Number': '',
