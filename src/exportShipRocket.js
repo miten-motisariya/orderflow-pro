@@ -39,7 +39,7 @@ export const exportToShipRocketCSV = (orders, startingInvoiceNumber) => {
         }
 
         // Adjust selling price for Canada
-        const sellingPrice = row?.country === 'Canada' ? 6 : 5;
+        const sellingPrice = row?.country === 'Canada' ? 6 : 2;
 
         // Map fields from the order to ShipRocket CSV format
         return {

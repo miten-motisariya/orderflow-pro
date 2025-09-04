@@ -37,19 +37,19 @@ export const exportToShipGlobalCSV = (orders, startingInvoiceNumber) => {
         const quantity = parseInt(vendorOrderItemQuantity);
         
         if (quantity === 1) {
-            vendorOrderItemUnitPrice = 11;
+            vendorOrderItemUnitPrice = 2;
             packageWeight = '0.05';
         } else if (quantity === 2) {
-            vendorOrderItemUnitPrice = 11 / 2;
+            vendorOrderItemUnitPrice = 2 * 2;
             packageWeight = '0.05';
         } else if (quantity === 3) {
-            vendorOrderItemUnitPrice = 11 / 3; // 3.67 (rounded)
+            vendorOrderItemUnitPrice = 2 * 3; // 3.67 (rounded)
             packageWeight = '0.05';
         } else if (quantity >= 4) {
-            vendorOrderItemUnitPrice = 11 * quantity; // 11 multiplied by quantity
+            vendorOrderItemUnitPrice = 2 * quantity; // 11 multiplied by quantity
             packageWeight = '0.15'; // 150gm
         } else {
-            vendorOrderItemUnitPrice = 17; // Default fallback for other quantities
+            vendorOrderItemUnitPrice = 2; // Default fallback for other quantities
             packageWeight = '0.05';
         }
 
@@ -104,7 +104,7 @@ export const exportToShipGlobalCSV = (orders, startingInvoiceNumber) => {
         // Map fields from the order CSV to ShipGlobal format
         return {
             invoice_no: invoiceNumber,
-            invoice_date: todayDate,
+            invoice_date: `${todayDate}`,
             order_reference: '',
             service: service,
             package_weight: packageWeight,
