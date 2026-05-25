@@ -11,7 +11,7 @@ export const formatDate = (date) => {
 };
 
 export const exportToShipRocketCSV = (orders, startingInvoiceNumber) => {
-    const todayDate = formatDate(new Date()); // Get today's date in ShipRocket format
+    const todayDate = formatDate(new Date());
 
     const mappedOrders = orders.map((row, index) => {
         let customerFirstName = row?.firstName;
@@ -29,33 +29,42 @@ export const exportToShipRocketCSV = (orders, startingInvoiceNumber) => {
             }
         }
 
-        // Increment the invoice number
+        // Increment invoice number
         const invoiceNumber = `${parseInt(startingInvoiceNumber ?? 1) + index}`;
 
-        // Adjust pincode for USA (limit to 5 characters if it contains a hyphen)
-        let zipCode = row?.zipCode || '';
-        if (row?.country === 'United States' && zipCode.length > 5) {
-            zipCode = zipCode.slice(0, 5);  // Extract first 5 characters of the ZIP code
+        /**
+         * ZIP CODE LOGIC
+         * - Keep leading zeroes for USA ZIP codes like 08080
+         * - If ZIP+4 format exists like 28792-3017 -> use only 28792
+         * - Force value as string/text
+         */
+        let zipCode = String(row?.zipCode || '').trim();
+
+        if (row?.country === 'United States') {
+            if (zipCode.includes('-')) {
+                zipCode = zipCode.split('-')[0];
+            }
+
+            // Ensure 5-digit ZIP keeps leading zero
+            zipCode = zipCode.padStart(5, '0');
         }
 
-        // Adjust selling price for Canada
-        let sellingPrice;
+        const sellingPrice = 1;
 
-        if (row?.noOfItems === 1) {
-          sellingPrice = 2;
-        } else if (row?.noOfItems === 2) {
-          sellingPrice = 1;
+        let shipmentWeight = '0.05';
+
+        if (row?.noOfItems === 2) {
+            shipmentWeight = '0.10';
         } else if (row?.noOfItems === 3) {
-          sellingPrice = 0.66;
+            shipmentWeight = '0.15';
         } else if (row?.noOfItems >= 4) {
-          sellingPrice = 0.5;
+            shipmentWeight = '0.20';
         }
 
-        // Map fields from the order to ShipRocket CSV format
         return {
             'Order ID': invoiceNumber,
             'Channel': 'Custom',
-            'Order Date': row?.saleDate,  // Assuming 'saleDate' is already in dd-mm-yyyy format
+            'Order Date': row?.saleDate,
             'Purpose of Shipment(Gift/Sample)': 'Gift',
             'Currency': 'USD',
             'Customer First Name': customerFirstName,
@@ -65,21 +74,33 @@ export const exportToShipRocketCSV = (orders, startingInvoiceNumber) => {
             'Shipping Address Line 1': row?.addressLine1 || '',
             'Shipping Address Line 2': row?.addressLine2 || '',
             'Shipping Address Country': row?.country || '',
-            'Shipping Address Postcode': zipCode, // Updated ZIP code
+
+            // ZIP as text/string
+            'Shipping Address Postcode': zipCode,
+
             'Shipping Address City': row?.city || '',
             'Shipping Address State': row?.state || 'NA',
             'Master SKU': 'CAP',
             'Product Name': 'Fabric Surgical Scrub Cap',
-            'HSN code': '62101000', // Default HSN code for product
+            'HSN code': '62101000',
+
             'Product Quantity': row?.noOfItems || '',
-            'Tax': 1, // Assuming tax is 0
+
+            'Tax': 1,
             'VAT Number': '',
-            'Selling Price(Per Unit Item Inclusive of Tax)': sellingPrice, // Updated price for Canada
-            'Invoice Date': todayDate,  // Invoice date is today
-            'Length (cm)': 10,          // Fixed value for length
-            'Breadth (cm)': 8,          // Fixed value for breadth
-            'Height (cm)': 2,           // Fixed value for height
-            'Weight Of Shipment(kg)': '0.05', // Fixed weight
+
+            // Fixed selling price
+            'Selling Price(Per Unit Item Inclusive of Tax)': sellingPrice,
+
+            'Invoice Date': todayDate,
+
+            'Length (cm)': 10,
+            'Breadth (cm)': 8,
+            'Height (cm)': 2,
+
+            // Dynamic shipment weight
+            'Weight Of Shipment(kg)': shipmentWeight,
+
             'Ioss': '',
             'Eori': '',
             'Terms of Invoice': '',
@@ -93,12 +114,12 @@ export const exportToShipRocketCSV = (orders, startingInvoiceNumber) => {
         return;
     }
 
-    // Use PapaParse to convert the JSON object to CSV
+    // Convert JSON to CSV
     const csv = Papa.unparse(mappedOrders, {
         header: true,
     });
 
-    // Create a blob and download the file
+    // Download CSV
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
