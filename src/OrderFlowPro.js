@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import Papa from 'papaparse';
-import { ChevronUp, ChevronDown, Upload, Download, Search, Filter, X, FileText, Package, Globe } from 'lucide-react';
+import { ChevronUp, ChevronDown, Upload, Download, Search, X, FileText, Package, Globe } from 'lucide-react';
 import { exportToShipGlobalCSV } from './exportShipGlobal';
 import { exportToShipRocketCSV } from './exportShipRocket';
 
@@ -31,7 +31,7 @@ const OrderFlowPro = () => {
 
   // Selection states
   const [selectedOrders, setSelectedOrders] = useState(new Set());
-  const [selectionMode, setSelectionMode] = useState('manual'); // 'manual', 'page', 'all'
+  const [, setSelectionMode] = useState('manual'); // 'manual', 'page', 'all'
 
   // Sort state
   const [sortConfig, setSortConfig] = useState({ key: '', direction: 'asc' });
