@@ -2,10 +2,42 @@
 
 import Papa from 'papaparse';
 import countryData from './countryCode.json'
+import stateCodes from './stateCodes.json'
 
 const getCountryCode = (countryName) => {
     const country = countryData.find(c => c.country_name.toLowerCase() === countryName.toLowerCase());
     return country ? country.country_iso2 : countryName;
+};
+
+const getCountryName = (countryInput) => {
+    if (!countryInput) return '';
+    const input = countryInput.trim();
+    const byName = countryData.find(c => c.country_name.toLowerCase() === input.toLowerCase());
+    if (byName) return byName.country_name;
+    const byIso = countryData.find(c => c.country_iso2.toLowerCase() === input.toLowerCase());
+    if (byIso) return byIso.country_name;
+    return input;
+};
+
+const getStateCode = (countryInput, stateInput) => {
+    if (!stateInput) return 'NA';
+    const stateTrimmed = String(stateInput).trim();
+    if (!stateTrimmed) return 'NA';
+
+    const countryName = getCountryName(countryInput);
+    const statesForCountry = stateCodes[countryName];
+    if (!statesForCountry) return stateTrimmed;
+
+    const lookupKey = stateTrimmed.toLowerCase();
+    if (statesForCountry[lookupKey]) return statesForCountry[lookupKey];
+
+    // If user already passed a state code, return it as-is when it matches any value
+    const match = Object.values(statesForCountry).find(
+        code => code.toLowerCase() === lookupKey
+    );
+    if (match) return match;
+
+    return stateTrimmed;
 };
 
 export const formatDate = (date) => {
@@ -26,30 +58,22 @@ export const exportToShipGlobalCSV = (orders, startingInvoiceNumber) => {
         const customerShippingAddress = row?.addressLine1 || '';
         const customerShippingCity = row?.city || '';
         const customerShippingPostcode = row?.zipCode || '';
-        const customerShippingState = row?.state || 'NA'; 
         const customerShippingCountryCode = getCountryCode(row?.country || '');
+        const customerShippingState = getStateCode(row?.country, row?.state);
         const vendorOrderItemName = 'Fabric Cotton Cap';
         const vendorOrderItemQuantity = row?.noOfItems || '';
-        
-        // Dynamic unit price and package weight based on quantity
+
+        // Unit price scales with quantity so the shipment total stays around $10
+        // qty 1 -> $10, qty 2 -> $5, qty 5 -> $2, qty 10 -> $1 (floor of 10/qty, min $1)
+        // Package weight steps up every 2 items: qty 1 -> 0.05, qty 2-3 -> 0.10, qty 4-5 -> 0.15, ...
+        const quantity = parseInt(vendorOrderItemQuantity);
         let vendorOrderItemUnitPrice;
         let packageWeight;
-        const quantity = parseInt(vendorOrderItemQuantity);
-        
-        if (quantity === 1) {
-            vendorOrderItemUnitPrice = 2;
-            packageWeight = '0.05';
-        } else if (quantity === 2) {
-            vendorOrderItemUnitPrice = 2 * 2;
-            packageWeight = '0.05';
-        } else if (quantity === 3) {
-            vendorOrderItemUnitPrice = 2 * 3; // 3.67 (rounded)
-            packageWeight = '0.05';
-        } else if (quantity >= 4) {
-            vendorOrderItemUnitPrice = 2 * quantity; // 11 multiplied by quantity
-            packageWeight = '0.15'; // 150gm
+        if (quantity >= 1) {
+            vendorOrderItemUnitPrice = Math.max(1, Math.floor(10 / quantity));
+            packageWeight = (Math.ceil((quantity + 1) / 2) * 0.05).toFixed(2);
         } else {
-            vendorOrderItemUnitPrice = 2; // Default fallback for other quantities
+            vendorOrderItemUnitPrice = 10;
             packageWeight = '0.05';
         }
 
@@ -132,6 +156,8 @@ export const exportToShipGlobalCSV = (orders, startingInvoiceNumber) => {
             vendor_order_item_hsn: '65061090', // Default HSN code
             vendor_order_item_tax_rate: 0,
             ioss_number: '',
+            eori_number: '',
+            vat_number: '',
             csbv5_limit_comfirmation: ''
         };
     }).filter(row => row !== null); // Remove any rows that failed validation
@@ -172,6 +198,8 @@ export const exportToShipGlobalCSV = (orders, startingInvoiceNumber) => {
             { id: 'vendor_order_item_hsn', title: 'vendor_order_item_hsn' },
             { id: 'vendor_order_item_tax_rate', title: 'vendor_order_item_tax_rate' },
             { id: 'ioss_number', title: 'ioss_number' },
+            { id: 'eori_number', title: 'eori_number' },
+            { id: 'vat_number', title: 'vat_number' },
             { id: 'csbv5_limit_comfirmation', title: 'csbv5_limit_comfirmation' }
         ]
     });
